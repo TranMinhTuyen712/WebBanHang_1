@@ -15,35 +15,41 @@ namespace bai_2.Controllers
     public class ProductControlller : Controller
     {
         private readonly ApplicationDbContext _db;
+
         private readonly IHostingEnvironment _hosting;
+
         public ProductControlller(ApplicationDbContext db, IHostingEnvironment hosting)
         {
             _db = db;
             _hosting = hosting;
         }
-        //Hiển thị danh sách sản phẩm cần quản lý
+        //Hiển thị danh sách sản phẩm
         public IActionResult Index(int? page, string textsearch = "")
         {
             var pageIndex = (int)(page != null ? page : 1);
-            var pageSize = 10;
-
+            var pageSize = 5;
             var dsSanPham = _db.Products.Include(x => x.Category).Where(p => p.Name.ToLower().Contains(textsearch.ToLower())).ToList();
-            //thống kê số trang
+
+            //Thống kê số trang
             var pageSum = dsSanPham.Count() / pageSize + (dsSanPham.Count() % pageSize > 0 ? 1 : 0);
-            //truyen du lieu cho View
+            //Truyền dữ liệu cho view
             ViewBag.PageSum = pageSum;
             ViewBag.PageIndex = pageIndex;
             return View(dsSanPham.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList());
-            // return View("ShowAll");
+            //return View("ShowAll");
         }
-
-        //Hiển thị giao diện thêm sản phẩm
+        //Hiển thị form thêm sản phẩm mới
         public IActionResult Add()
         {
-            ViewBag.CategoryList = _db.Categories.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name });
+            //truyền danh sách thể loại cho View để sinh ra điều khiển DropDownList
+            ViewBag.CategoryList = _db.Categories.Select(x => new SelectListItem
+            {
+                Value = x.Id.ToString(),
+                Text = x.Name
+            });
             return View();
         }
-        //xử lý thêm mới sản phẩm
+        //Xử lý thêm sản phẩm
         [HttpPost]
         public IActionResult Add(Product product, IFormFile ImageUrl)
         {
@@ -67,21 +73,6 @@ namespace bai_2.Controllers
             });
             return View();
         }
-
-        private string SaveImage(IFormFile image)
-        {
-            //đặt lại tên file cần lưu
-            var filename = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-            //lay duong dan luu tru wwwroot tren server
-            var path = Path.Combine(_hosting.WebRootPath, @"images/products");
-            var saveFile = Path.Combine(path, filename);
-            using (var filestream = new FileStream(saveFile, FileMode.Create))
-            {
-                image.CopyTo(filestream);
-            }
-            return @"images/products/" + filename;
-        }
-
         //Hiển thị form cập nhật sản phẩm
         public IActionResult Update(int id)
         {
@@ -109,7 +100,9 @@ namespace bai_2.Controllers
                 {
                     //xu ly upload và lưu ảnh đại diện mới
                     product.ImageUrl = SaveImage(ImageUrl);
+
                     //xóa ảnh cũ (nếu có)
+
                     if (!string.IsNullOrEmpty(existingProduct.ImageUrl))
                     {
                         var oldFilePath = Path.Combine(_hosting.WebRootPath,
@@ -121,6 +114,7 @@ namespace bai_2.Controllers
                     }
                 }
                 else
+
                 {
                     product.ImageUrl = existingProduct.ImageUrl;
                 }
@@ -139,9 +133,21 @@ namespace bai_2.Controllers
                 Value = x.Id.ToString(),
                 Text = x.Name
             });
-            return View(product);
+            return View();
         }
-
+        private string SaveImage(IFormFile image)
+        {
+            //đặt lại tên file cần lưu
+            var filename = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+            //lay duong dan luu tru wwwroot tren server
+            var path = Path.Combine(_hosting.WebRootPath, @"images/products");
+            var saveFile = Path.Combine(path, filename);
+            using (var filestream = new FileStream(saveFile, FileMode.Create))
+            {
+                image.CopyTo(filestream);
+            }
+            return @"images/products/" + filename;
+        }
         //Hiển thị form xác nhận xóa sản phẩm
         public IActionResult Delete(int id)
         {
@@ -168,9 +174,10 @@ namespace bai_2.Controllers
                 if (System.IO.File.Exists(oldFilePath))
                 {
                     System.IO.File.Delete(oldFilePath);
+
                 }
             }
-            // xoa san pham khoi CSDL
+            //Xóa sp khỏi CSDL
             _db.Products.Remove(product);
             _db.SaveChanges();
             TempData["success"] = "Product deleted success";
@@ -178,16 +185,13 @@ namespace bai_2.Controllers
             return RedirectToAction("Index");
         }
 
-        #region CAll_API
-        //---call API---------------------
-        // lấy tất cả sản phẩm
+
+        //call API
         [HttpGet]
         public IActionResult GetAll()
         {
             var dsSanPham = _db.Products.Include(x => x.Category).ToList();
             return Json(dsSanPham);
         }
-        #endregion
-
     }
 }

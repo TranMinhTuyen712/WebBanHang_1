@@ -7,15 +7,14 @@ using WebBanHang_1.Models;
 
 namespace WebBanHang.Models
 {
-    //lớp biểu diễn 1 phần tử của giỏ hàng
+    //Lớp biểu diễn 1 phần tử của giỏ hàng 
     public class CartItem
     {
-
         public Product Product { get; set; }
         public int Quantity { get; set; }
-    }
 
-    //lớp biểu diễn giỏ hàng
+    }
+    //Lớp biểu diễn giỏ hàng 
     public class Cart
     {
         private List<CartItem> _items;
@@ -25,25 +24,25 @@ namespace WebBanHang.Models
         }
 
         public List<CartItem> Items { get { return _items; } }
-        //--------cac phuong thuc xu ly tren Giỏ hàng-----------
-        //phuong thuc them 1 san pham vào giỏ
+        //Các phương thức xử lý trên giỏ hàng
+        //Phương thức thêm sp vào giỏ
         public void Add(Product p, int qty)
         {
             var item = _items.FirstOrDefault(x => x.Product.Id == p.Id);
-            if (item == null) //chưa có
+            if (item == null)//Chưa có
             {
                 _items.Add(new CartItem { Product = p, Quantity = qty });
             }
             else
             {
-                item.Quantity += qty;
+                item.Quantity += qty;   
             }
         }
-        //phuong thuc cập nhật số lượng 
+        //Phương thức cập nhật số lượng
         public void Update(int productId, int qty)
         {
             var item = _items.FirstOrDefault(x => x.Product.Id == productId);
-            if (item != null)//tồn tại
+            if (item != null)//Tồn tại
             {
                 if (qty > 0)
                 {
@@ -55,16 +54,17 @@ namespace WebBanHang.Models
                 }
             }
         }
-        //phuong thuc cập nhật số lượng 
-        public void Remove(int productId)
+        //Phương thức xóa số lượng
+        internal void Remove(int productId)
         {
             var item = _items.FirstOrDefault(x => x.Product.Id == productId);
-            if (item != null)
+            if (item != null)//Tồn tại
             {
                 _items.Remove(item);
             }
         }
-        //tính tổng thành tiền
+
+        //Phương thức tính tổng thành tiền
         public double Total
         {
             get
@@ -73,7 +73,7 @@ namespace WebBanHang.Models
                 return total;
             }
         }
-        //tính tổng số lượng sản phẩm
+        //Phương thức tính tổng số lượng của giỏ
         public double Quantity
         {
             get
@@ -82,5 +82,6 @@ namespace WebBanHang.Models
                 return total;
             }
         }
+
     }
 }
